@@ -4,6 +4,7 @@
 """
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import Any
 
 from app.seed import SEED_ROWS
@@ -11,12 +12,18 @@ from app.seed import SEED_ROWS
 
 class Store:
     def __init__(self) -> None:
-        self._tables: dict[str, list[dict[str, Any]]] = {
-            name: [dict(row) for row in rows] for name, rows in SEED_ROWS.items()
-        }
+        self._tables: dict[str, list[dict[str, Any]]] = self._fresh()
+
+    @staticmethod
+    def _fresh() -> dict[str, list[dict[str, Any]]]:
+        return {name: deepcopy(rows) for name, rows in SEED_ROWS.items()}
 
     def module_names(self) -> list[str]:
         return sorted(self._tables)
+
+    def reset(self) -> None:
+        """把所有模块恢复成初始示例数据（测试隔离用）。"""
+        self._tables = self._fresh()
 
     def rows(self, module: str) -> list[dict[str, Any]]:
         return self._tables.setdefault(module, [])

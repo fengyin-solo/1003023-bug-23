@@ -11,7 +11,21 @@
     <main class="app-main">
       <header class="app-head">
         <span class="head-desc">面向通信基站站点入网、动力环境监控、天馈巡检、发电保障与退网拆站的一体化基站运维管理后台。</span>
-        <span class="head-user">当前值班：{{ store.operator }} · {{ store.shiftLabel }}</span>
+        <span class="head-user">
+          当前值班：{{ store.operator.name }}
+          <em class="role-tag" :class="{ admin: store.isDoorAdmin }">{{ store.operator.role }}</em>
+          <select
+            class="role-switch"
+            :value="store.operator.id"
+            title="切换登录身份，验证门禁归属授权"
+            @change="onSwitch(($event.target as HTMLSelectElement).value)"
+          >
+            <option value="anonymous">未登录访客（只读）</option>
+            <option v-for="op in store.operators" :key="op.id" :value="op.id">
+              {{ op.name }} · {{ op.role }}{{ op.sites.length ? `（${op.sites.join('、')}）` : '' }}
+            </option>
+          </select>
+        </span>
       </header>
       <RouterView />
     </main>
@@ -19,9 +33,40 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
+
 import { useSessionStore } from '@/stores/session'
 
 const store = useSessionStore()
 
 const navItems = [{ label: "运营概览", path: "/" }, { label: "基站台账", path: "/site" }, { label: "铁塔管理", path: "/tower" }, { label: "动力配套", path: "/power" }, { label: "蓄电池组", path: "/battery" }, { label: "发电机组", path: "/genset" }, { label: "开关电源", path: "/rectifier" }, { label: "空调管理", path: "/ac" }, { label: "天馈系统", path: "/antenna" }, { label: "传输设备", path: "/transmission" }, { label: "馈线巡检", path: "/feeder" }, { label: "防雷接地", path: "/lightningprot" }, { label: "消防设施", path: "/firealarm" }, { label: "门禁管理", path: "/dooraccess" }, { label: "巡检作业", path: "/patrol" }, { label: "油料管理", path: "/fuel" }, { label: "场租合同", path: "/rental" }, { label: "电费管理", path: "/electricbill" }, { label: "拆站管理", path: "/demolition" }, { label: "应急通信", path: "/emergency" }, { label: "节能改造", path: "/energyeff" }]
+
+function onSwitch(id: string) {
+  store.select(id)
+}
+
+onMounted(() => {
+  void store.loadOperators()
+})
 </script>
+
+<style scoped>
+.role-tag {
+  font-style: normal;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  background: #e4e7ec;
+  color: #475467;
+}
+.role-tag.admin {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+.role-switch {
+  margin-left: 8px;
+  font-size: 12px;
+  padding: 2px 4px;
+}
+</style>
